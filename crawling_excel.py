@@ -44,11 +44,10 @@ def danawa_crawling(search_query):
             #print(f"이름 : {name}, 가격 : {price}, 주소 : {url}")
             #driver.close()
             new_list.append([name,price,url])
-    # 가격을 기준으로 정렬
-        sorted_prices = sorted(new_list, key=lambda x: x[1])
+    
 
     driver.close()
-    return sorted_prices
+    return new_list
 
 # 엑셀에 저장하는 함수
 def save_to_excel(data_list, filename):

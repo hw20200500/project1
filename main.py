@@ -23,7 +23,9 @@ def submit():
 
     # database 변수는 엑셀 파일에 저장할 값들을 저장하는 변수.
     # 검색어, 최저가 상품명, 가격, 링크, 사용자 id, 채팅앱(app) 순으로 저장
-    database = product_list[0]
+    # 채팅에서 출력하는 product_list를 가격을 기준으로 정렬하여 가장 싼 데이터만 저장.
+    sorted_prices = sorted(product_list, key=lambda x: x[1])
+    database = sorted_prices[0]
     database.append(id)
     database.append(alarm)
     database.insert(0, product)
