@@ -20,7 +20,7 @@ for product,price in msg.items():
 """
 
 # 텔레그램 보내기 및 실행
-api_token="6830788564:AAG92fwOemNTQpX0GvSfEm5PkpKAsGYeJBc"
+api_token=""
 bot0 = telegram.Bot(token=api_token)
 
 async def telegram_bot(my_id,msg0):
