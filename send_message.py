@@ -2,6 +2,7 @@ import requests
 import telegram
 import asyncio
 
+#ntfy 보내기 및 실행
 def ntfy0(topic,msg):
     requests.post(f"https://ntfy.sh/{topic}", 
         data=f"{msg}".encode(encoding='utf-8'))
@@ -18,12 +19,12 @@ for product,price in msg.items():
     ntfy0("dokkaebi",f"{product}: {price}")
 """
 
+# 텔레그램 보내기 및 실행
 api_token="6830788564:AAG92fwOemNTQpX0GvSfEm5PkpKAsGYeJBc"
 bot0 = telegram.Bot(token=api_token)
 
 async def telegram_bot(my_id,msg0):
-    for product,price in msg0.items():
-        await bot0.sendMessage(chat_id=my_id,text=f"{product}: {price}")
+    await bot0.sendMessage(chat_id=my_id,text=msg0)
 
 """
 사용법

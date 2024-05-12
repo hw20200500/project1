@@ -4,19 +4,21 @@
     <title>제품 및 알람 입력</title>
 </head>
 <body>
-    <h2>제품 및 알람 입력</h2>
+    <h1>제품 최저가 알림 서비스</h1>
+    <h3> 찾고싶은 제품명을 입력하세요. </h1>
     <form action="/submit" method="post">
-        <label for="product">제품:</label><br>
-        <input type="text" id="product" name="product"><br>
-        <label for="alarm">알람 선택:</label><br>
+        <label for="search">검색어를 입력하세요 : </label>
+        <input type="text" id="search" name="search"><br><br>
+        <h3>알림받는 채팅 앱을 선택해주세요.</h2>
+        <label for="alarm">알람 선택: </label>
         <select id="alarm" name="alarm">
             <option value="slack">slack</option>
             <option value="ntfy">ntfy</option>
             <option value="telegram">텔레그램</option>
         </select><br><br>
-        <h4>선택한 채팅 앱의 계정 아이디를 입력해주세요.</h4>
-        <label for="product">ID:</label><br>
-        <input type="text" id="id" name="id"><br>
+        <h3>선택한 채팅 앱의 계정 아이디를 입력해주세요.</h4>
+        <label for="product">ID: </label>
+        <input type="text" id="id" name="id"><br><br>
         <input type="submit" value="제출">
     </form>
 </body>

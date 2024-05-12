@@ -1,7 +1,11 @@
-import requests, time
+import time, threading, os, time
 import send_message
 import crawling_excel
 from flask import Flask, render_template, request, redirect
+import asyncio
+from openpyxl import load_workbook
+
+
 
 app = Flask(__name__)
 
@@ -11,33 +15,95 @@ def index():
 
 @app.route('/submit', methods=['POST'])
 def submit():
-    product = request.form['product']
+    product = request.form['search']
     alarm = request.form['alarm']
     id = request.form['id']
-    if __name__ == "__main__":
-        data = crawling_excel.danawa_crawling(product)
-        product_list = data[:5]
-        for i in range(len(product_list)): product_list[i].append(id)
-        print(product_list)
-        crawling_excel.save_to_excel(product_list, f"product_info.xlsx")
-        message  = f"{product}의 최저가 상품 리스트입니다.\n\n"
-        for i in range(5):
-            for text in product_list[i]:
-                if text!=product_list[i][-1]:
-                    message = message+text+"\n"
-            message = message+"="*50+"\n\n"
-        print(message)
-        
+    data = crawling_excel.danawa_crawling(product)
+    product_list = data[:5]
+
+    # database 변수는 엑셀 파일에 저장할 값들을 저장하는 변수.
+    # 검색어, 최저가 상품명, 가격, 링크, 사용자 id, 채팅앱(app) 순으로 저장
+    database = product_list[0]
+    database.append(id)
+    database.append(alarm)
+    database.insert(0, product)
+    
+    crawling_excel.save_to_excel(database, f"product_info.xlsx")
+
+    # 채팅봇이 보낼 메시지 내용 생성
+    message  = f"{product}의 최저가 상품 리스트입니다.\n\n"
+
+    # 찾은 제품들 중 가장 저렴한 제품 5개만 추출해서 출력
+    for i in range(5):
+        for text in product_list[i]:
+            message = message+text+"\n"
+        message = message+"="*50+"\n\n"
+    
+    # 터미널에서 메시지 내용 확인하기
+    print(message)
+
+    # 선택한 알람이 ntfy일 경우,
     if alarm=="ntfy":
+        # 사용자마다 다른 ntfy 채팅방을 생성하기 위해서 사용자 id별로 다른 채팅방 생성 및 그곳에 메시지 전송
         send_message.ntfy0(f"danawa_{id}", message)
+
+        # 없는 채팅방(ntfy 링크)을 새로 생성할 경우 시간이 좀 소요되므로 10초정도 뒤에 ntfy 채팅방 링크로 이동
         time.sleep(10)
         return redirect(f"https://ntfy.sh/danawa_{id}")
     elif alarm=="slack":
-        return redirect("https://app.slack.com/client/T072KG05545/C072QT9TFJQ")
-    # 여기서는 입력된 제품과 알람 설정을 사용하여 필요한 작업을 수행합니다.
-    # 예를 들어 데이터베이스에 저장하거나 다른 서비스로 전송하는 등의 작업을 수행할 수 있습니다.
-    else:
-        return f'제품: {product}, 알람 선택: {alarm}'
 
+        # 아직 코드를 못받아서 그냥 메시지를 화면에 출력하는 것으로 임시 설정.
+        return message
+        # return redirect("https://app.slack.com/client/T072KG05545/C072QT9TFJQ")
+    else:
+        # 텔레그램 실행. 아직 테스트 안해봄.
+        asyncio.run(send_message.telegram_bot(id, message))
+    
+
+# 스레드를 이용하여 데이터베이스에 저장되어 있는 제품들 중 더 저렴한 제품이 있는지 없는지 확인하는 함수
+def scheduled_task(interval_minutes):
+    while True:
+        # 특정 함수를 호출합니다.
+        file_path = f"database\\product_info.xlsx"
+        if os.path.isfile(file_path):
+            wb = load_workbook(file_path)
+            ws = wb.active
+            for row in ws.iter_rows(values_only=True):
+                # 맨 처음 칼럼인 row를 제외한 나머지 row에서 실행하기
+                if row!=('검색어', '제품명', '가격', '링크', 'id', 'app'):
+                    print(row)
+                    products_list = crawling_excel.danawa_crawling(row[0])
+                    
+                    # 지금 찾은 제품의 가격이 엑셀에 저장된 동일 제품의 가격보다 더 저렴한 경우 실행
+                    if int(products_list[0][1])<int(row[2]):
+                        message = f"이전에 검색하신 {row[0]} 상품보다 더 저렴한 제품을 발견했습니다.\n\n"
+                        for text in products_list[0]:
+                            message = message+text+"\n"
+                        print(message)
+
+                        # 엑셀에 저장된 app이 ntfy일 때
+                        if row[-1]=="ntfy":
+                            send_message.ntfy0(f"danawa_{row[-2]}", message)
+
+                        # 엑셀에 저장된 app이 slack일 때
+                        elif row[-1]=="slack":
+                            pass
+                            # return redirect("https://app.slack.com/client/T072KG05545/C072QT9TFJQ")
+                        
+                        # 엑셀에 저장된 app이 텔레그램일 때
+                        else:
+                            asyncio.run(send_message.telegram_bot(row[-2], message))
+
+                    else : print("해당 제품의 더 싼 제품이 아직 없습니다.")
+                
+        # 주어진 시간 간격 동안 대기합니다.
+        time.sleep(interval_minutes * 60)  # 분을 초로 변환하여 사용합니다
+
+
+# 스레드를 생성하여 예약된 작업을 실행합니다.
+thread = threading.Thread(target=scheduled_task, args=(1,))  # 1분마다 실행
+thread.start()
 if __name__ == '__main__':
     app.run(debug=True)
+
+    
