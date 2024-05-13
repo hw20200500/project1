@@ -44,7 +44,6 @@ def danawa_crawling(search_query):
             #print(f"이름 : {name}, 가격 : {price}, 주소 : {url}")
             #driver.close()
             new_list.append([name,price,url])
-    
 
     driver.close()
     return new_list
@@ -66,7 +65,7 @@ def save_to_excel(data_list, filename):
 
     # 검색한 제품의 최저값만 엑셀에 저장하도록 변경
     ws.append(data_list)
-    wb.save(f"database\\{filename}")
+    wb.save(file_path)
     print(f"데이터가 '{filename}'에 저장되었습니다.")
 
 
