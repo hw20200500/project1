@@ -1,25 +1,27 @@
 import requests
 import telegram
-import asyncio
+from slack_sdk import WebClient
+from slack_sdk.errors import SlackApiError
 
-# 웹훅 주소를 변수에 넣어 사용
-slack_url = "https://hooks.slack.com/services/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"
-def sendSlackWebHook(strText):
-    headers = {
-        "Content-type": "application/json"
-    }
-    data = {
-        "text": strText
-    }
-    res = requests.post(slack_url, headers=headers, json=data)
-# curl -X POST -H 'Content-type: application/json' --data '{"text":"Hello, World!"}' https://hooks.slack.com/services/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
-    if res.status_code == 200:
-        return "OK"
-    else:
-        print(res)
-        return "Error"
-# 크롤링하여 얻은 정보 중 product_name과 product_price 정보를 가져온다
-# 아래는 임의로 설정한 값
+SLACK_API_TOKEN = ""
+SLACK_CHANNEL = "#python-slack-test"
+def sendSlackWebHook(message):
+    try:
+        # WebClient 인스턴스를 생성하고, 생성자에 Slack API 토큰을 전달합니다.
+        client = WebClient(token=SLACK_API_TOKEN)
+        # chat_postMessage 메소드를 사용하여 메시지를 Slack 채널에 전송합니다.
+        response = client.chat_postMessage(
+            channel=SLACK_CHANNEL,
+            text=message
+        )
+        # 응답을 출력하여 메시지 전송 성공 여부를 확인합니다.
+        print(f"Slack message sent: {response['message']['text']}")
+        return f"Slack message sent: {response['message']['text']}"
+    except SlackApiError as e:
+        # 메시지 전송 중 발생한 에러를 캐치하고, 에러 메시지를 출력합니다.
+        print(f"Error sending message to Slack: {e.response['error']}")
+        return f"Error sending message to Slack: {e.response['error']}"
+
 
 #ntfy 보내기 및 실행
 def ntfy0(topic,msg):
@@ -39,7 +41,7 @@ for product,price in msg.items():
 """
 
 # 텔레그램 보내기 및 실행
-api_token=""
+api_token="6997403129:AAGkFmx9pOZrAACqLlvTLjBen7nSyCASRLE"
 bot0 = telegram.Bot(token=api_token)
 
 async def telegram_bot(my_id,msg0):

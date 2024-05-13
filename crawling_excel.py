@@ -15,6 +15,9 @@ now = datetime.now().strftime(f"%Y-%m-%d")
 def danawa_crawling(search_query):
     options = Options()
     options.add_argument('headless')  # 브라우저 창 안보이기
+    headers = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36" #유저 에이전트
+    options.add_argument(f"user-agent={headers}") #유저 에이전트 추가
+
     chromedriver_autoinstaller.install()
     driver = webdriver.Chrome(options=options)
     driver.implicitly_wait(5)  # 크롬 브라우저 내부 대기
@@ -39,7 +42,7 @@ def danawa_crawling(search_query):
             url=v.select_one('p.prod_name > a').get('href')
         if v.find('div', class_='prod_pricelist'):
             price = v.select_one('ul>li>p> a').text.strip()
-            price = price.replace(',', '').replace('원', '')
+            # price = price.replace(',', '').replace('원', '')
         if(url.startswith("https")):
             #print(f"이름 : {name}, 가격 : {price}, 주소 : {url}")
             #driver.close()
